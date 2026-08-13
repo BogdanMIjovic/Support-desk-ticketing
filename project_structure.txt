@@ -1,0 +1,14 @@
+main.py
+app/
+├── __init__.py
+├── database.py       (engine, get_session)
+├── models.py          (SQLModel tabele: User, Ticket)
+├── schemas.py         (Pydantic: Create/Update/Out modeli, Token, itd.)
+├── auth.py            (autentifikacija, JWT, zaštita ruta)
+├── routes/
+│   ├── __init__.py
+│   ├── auth_routes.py
+│   └── ticket_routes.py
+└── middleware/
+    ├── __init__.py
+    └── timer.py
