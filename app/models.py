@@ -1,10 +1,21 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional
 from enum import Enum
+from datetime import datetime, timezone
 
 class UserRole(str, Enum):
     admin = "ADMIN"
     user = "USER"
+
+class TicketStatus(str, Enum):
+    open = "OPEN"
+    in_progress = "IN_PROGRESS"
+    solved = "SOLVED"
+
+class TicketPriority(str, Enum):
+    low = "LOW"
+    medium = "MEDIUM"
+    high = "HIGH"
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -14,6 +25,23 @@ class User(SQLModel, table=True):
     role: UserRole = Field(default=UserRole.user,index=True)
     hashed_password: str
     is_active: bool = Field(default=True, index=True)
+    tickets: list["Ticket"] = Relationship(back_populates="owner")
+
+
+class Ticket(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str = Field(index=True)
+    description: str
+    status: TicketStatus = Field(default=TicketStatus.open, index=True)
+    priority: TicketPriority = Field(default=TicketPriority.medium, index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
+    resolution: Optional[str] = None
+    owner_id: int = Field(foreign_key="user.id")
+    owner: Optional["User"] = Relationship(back_populates="tickets")
+
+
+
+
 
 
 
