@@ -17,14 +17,17 @@ class TicketPriority(str, Enum):
     medium = "MEDIUM"
     high = "HIGH"
 
-class User(SQLModel, table=True):
+class UserBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(index=True, unique=True)
     full_name: Optional[str] = None
     email: Optional[str] = Field(default=None, unique=True)
     role: UserRole = Field(default=UserRole.user,index=True)
-    hashed_password: str
     is_active: bool = Field(default=True, index=True)
+
+
+class User(UserBase, table=True):
+    hashed_password: str
     tickets: list["Ticket"] = Relationship(back_populates="owner")
 
 
