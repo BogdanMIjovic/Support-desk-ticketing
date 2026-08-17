@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from app.models import UserBase
+from app.models import UserBase, TicketStatus
 
 class TicketCreate(BaseModel):
     title: str
@@ -16,6 +16,7 @@ class TicketUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     resolution: Optional[str] = None
+    status: Optional[TicketStatus] = None
 
 class UserOut(UserBase):
     pass
