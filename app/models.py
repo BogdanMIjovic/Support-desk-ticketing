@@ -28,7 +28,7 @@ class UserBase(SQLModel):
 
 class User(UserBase, table=True):
     hashed_password: str
-    tickets: list["Ticket"] = Relationship(back_populates="owner")
+    tickets: list["Ticket"] = Relationship(back_populates="user")
 
 
 class Ticket(SQLModel, table=True):
@@ -40,7 +40,7 @@ class Ticket(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
     resolution: Optional[str] = None
     owner_id: int = Field(foreign_key="user.id")
-    owner: Optional["User"] = Relationship(back_populates="tickets")
+    user: Optional["User"] = Relationship(back_populates="tickets")
 
 
 
