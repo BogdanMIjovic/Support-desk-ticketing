@@ -18,6 +18,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="token")
 password_hash = PasswordHash.recommended()
 
+def get_hashed_password(password:str):
+    return password_hash.hash(password)
+
 def get_user(username: str, session: Session = Depends(get_session)):
     statement = select(User).where(User.username == username)
     user = session.exec(statement).first()
