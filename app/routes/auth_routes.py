@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlmodel import Session
+from sqlmodel import Session, select
 from datetime import timedelta
 from app.schemas import Token, UserOut, UserCreate
 from app.database import get_session
@@ -28,8 +28,12 @@ async def login_for_access_token(
 
     return Token(access_token=access_token, token_type="bearer")
 
-@router.post("/register", response_model=UserOut)
+@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def register_user(payload: UserCreate, session: Session = Depends(get_session)):
+    existing_user = session.exec(select(User).where(User.username == payload.username)).first()
+    if existing_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
+
     hashed_password = get_hashed_password(payload.password)
     base_user={
         "username": payload.username,
