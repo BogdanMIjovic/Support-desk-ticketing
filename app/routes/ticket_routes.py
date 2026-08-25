@@ -13,14 +13,16 @@ router = APIRouter(tags=["Ticket"])
 @router.get("/ticket", response_model=list[Ticket])
 def list_tickets(
         current_user: Annotated[User, Depends(get_current_active_user)],
-        session: Session = Depends(get_session)):
+        session: Session = Depends(get_session),
+        skip: int = 0,
+        limit: int = 10):
 
     statement = select(Ticket)
     if current_user.role == UserRole.admin:
         pass
     else:
         statement = statement.where(Ticket.owner_id==current_user.id)
-    statement = statement.order_by(Ticket.created_at.desc())
+    statement = statement.order_by(Ticket.created_at.desc()).offset(skip).limit(limit)
     return session.exec(statement).all()
 
 @router.get("/ticket/{ticket_id}", response_model=Ticket)
