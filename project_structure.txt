@@ -1,4 +1,6 @@
 main.py
+create_admin.py       (seed skripta za prvog admina)
+.env                   (SECRET_KEY i sl.)
 app/
 ├── __init__.py
 ├── database.py       (engine, get_session)
