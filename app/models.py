@@ -22,8 +22,10 @@ class UserBase(SQLModel):
     username: str = Field(index=True, unique=True)
     full_name: Optional[str] = None
     email: Optional[str] = Field(default=None, unique=True)
+    phone_number: Optional[str] = Field(default=None)
     role: UserRole = Field(default=UserRole.user,index=True)
     is_active: bool = Field(default=True, index=True)
+
 
 
 class User(UserBase, table=True):
