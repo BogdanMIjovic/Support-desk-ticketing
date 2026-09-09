@@ -97,6 +97,27 @@ def test_single_ticket(client):
     response_for_get_single_ticket_data = response_for_get_single_ticket.json()
     assert response_for_get_single_ticket_data["owner_id"] == create_ticket_owner_id
 
+# Tests that requesting a ticket_id that doesn't exist returns 404
+def test_non_existing_ticket(client):
+    client.post(
+        "/register",
+        json={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_token = client.post(
+        "/token",
+        data={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_token_data = response_for_token.json()
+    token = response_for_token_data["access_token"]
+
+
+    response_for_get_single_non_existing_ticket = client.get(
+        f"/ticket/{999999999}",
+        headers={"Authorization": f"Bearer {token}"})
+
+    assert response_for_get_single_non_existing_ticket.status_code == 404
 
 # Tests that a user who is NOT the ticket owner gets 403 when trying to GET that ticket
 def test_get_ticket_forbidden_for_other_user(client):
@@ -183,5 +204,171 @@ def test_update_own_ticket(client):
     assert data["title"] == "Updated ticket"
     assert data["description"] == "This is the updated ticket"
 
+# Tests that a user who is NOT the ticket owner gets 403 when trying to PATCH (update) that ticket
+
+def test_patch_ticket_forbidden_for_other_user(client):
+
+    client.post(
+        "/register",
+        json={"username": "Bogdan1", "password": "12345"}
+    )
+
+    response_for_token_1 = client.post(
+        "/token",
+        data={"username": "Bogdan1", "password": "12345"}
+    )
+
+    response_for_token_data_1 = response_for_token_1.json()
+    token_1 = response_for_token_data_1["access_token"]
 
 
+
+    client.post(
+        "/register",
+        json={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_token_2 = client.post(
+        "/token",
+        data={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_token_data_2 = response_for_token_2.json()
+    token_2 = response_for_token_data_2["access_token"]
+
+    response_for_create_ticket = client.post(
+        "/ticket",
+        json={"title": "First Ticket",
+              "description": "This is the frist ticket"},
+        headers={"Authorization": f"Bearer {token_2}"})
+
+    response_for_create_ticket_data = response_for_create_ticket.json()
+    create_ticket_id = response_for_create_ticket_data["id"]
+
+    response_for_patch_single_ticket = client.patch(
+        f"/ticket/{create_ticket_id}",
+        json={"title": "Updated ticket", "description": "This is the updated ticket"},
+        headers={"Authorization": f"Bearer {token_1}"}
+    )
+
+    assert response_for_patch_single_ticket.status_code == 403
+
+# Tests that the ticket owner (regular user) gets 403 when trying to update status/resolution on their own ticket
+
+def test_owner_cannot_update_status_or_resolution(client):
+        client.post(
+            "/register",
+            json={"username": "Bogdan", "password": "1234"}
+        )
+
+        response_for_token = client.post(
+            "/token",
+            data={"username": "Bogdan", "password": "1234"}
+        )
+
+        response_for_token_data = response_for_token.json()
+        token = response_for_token_data["access_token"]
+
+        response_for_create_ticket = client.post(
+            "/ticket",
+            json={"title": "First test",
+                  "description": "This is the first test",
+                  },
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        response_for_create_ticket_data = response_for_create_ticket.json()
+        create_ticket_id = response_for_create_ticket_data["id"]
+
+        response_for_ticket_update = client.patch(
+            f"/ticket/{create_ticket_id}",
+            json={"status": "SOLVED", "resolution": "The ticket was resolved"},
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        assert response_for_ticket_update.status_code == 403
+
+# Tests that a user can successfully delete their own ticket (DELETE /ticket/{ticket_id})
+
+def test_for_deleting_own_ticket(client):
+    client.post(
+        "/register",
+        json={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_token = client.post(
+        "/token",
+        data={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_token_data = response_for_token.json()
+    token = response_for_token_data["access_token"]
+
+    response_for_create_ticket = client.post(
+        "/ticket",
+        json={"title": "First test",
+              "description": "This is the first test",
+              },
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    response_for_ticket_data = response_for_create_ticket.json()
+    create_ticket_id = response_for_ticket_data["id"]
+
+    response_for_deletion = client.delete(
+        f"/ticket/{create_ticket_id}",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response_for_deletion.status_code == 204
+
+    response_for_get_single_ticket = client.get(
+        f"/ticket/{create_ticket_id}",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response_for_get_single_ticket.status_code == 404
+
+# Tests that a user who is NOT the ticket owner gets 403 when trying to DELETE that ticket
+def test_deletion_forbidden_for_other_users(client):
+    client.post(
+        "/register",
+        json={"username": "Bogdan1", "password": "12345"}
+    )
+
+    response_for_token_1 = client.post(
+        "/token",
+        data={"username": "Bogdan1", "password": "12345"}
+    )
+
+    response_for_token_data_1 = response_for_token_1.json()
+    token_1 = response_for_token_data_1["access_token"]
+
+    client.post(
+        "/register",
+        json={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_token_2 = client.post(
+        "/token",
+        data={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_token_data_2 = response_for_token_2.json()
+    token_2 = response_for_token_data_2["access_token"]
+
+    response_for_create_ticket = client.post(
+        "/ticket",
+        json={"title": "First Ticket",
+              "description": "This is the frist ticket"},
+        headers={"Authorization": f"Bearer {token_2}"})
+
+    response_for_create_ticket_data = response_for_create_ticket.json()
+    create_ticket_id = response_for_create_ticket_data["id"]
+
+    response_for_deletion = client.delete(
+        f"/ticket/{create_ticket_id}",
+        headers={"Authorization": f"Bearer {token_1}"}
+    )
+
+    assert response_for_deletion.status_code == 403
