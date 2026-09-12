@@ -601,6 +601,35 @@ def test_admin_can_delete_any_ticket(client, session):
     assert response_for_getting_deleted_ticket.status_code == 404
 
 
+def test_create_ticket_missing_title(client):
+    client.post(
+        "/register",
+        json={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_client_token = client.post(
+        "/token",
+        data={"username": "Bogdan", "password": "1234"}
+    )
+
+    response_for_client_token_data = response_for_client_token.json()
+    client_token = response_for_client_token_data["access_token"]
+
+    response_for_create_ticket = client.post(
+        "/ticket",
+        json={"title": "", "description": "This is the first test ticket"},
+
+        headers={"Authorization": f"Bearer {client_token}"}
+    )
+
+    assert response_for_create_ticket.status_code == 422
+
+
+
+
+
+
+
 
 
 

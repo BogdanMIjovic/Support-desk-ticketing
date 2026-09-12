@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from app.models import UserBase, TicketStatus
 
 class TicketCreate(BaseModel):
-    title: str
+    title: str = Field(min_length=3)
     description: str
 
 class UserCreate(BaseModel):
