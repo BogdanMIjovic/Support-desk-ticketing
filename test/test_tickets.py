@@ -623,17 +623,3 @@ def test_create_ticket_missing_title(client):
     )
 
     assert response_for_create_ticket.status_code == 422
-
-
-
-
-
-
-
-
-
-
-
-
-
-
