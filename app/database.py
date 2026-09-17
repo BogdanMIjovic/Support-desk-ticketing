@@ -1,6 +1,12 @@
 from sqlmodel import create_engine, Session
+from dotenv import load_dotenv
+import os
 
-engine = create_engine("postgresql://postgres:12345@localhost:5432/support_desk")
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+engine = create_engine(DATABASE_URL)
 
 def get_session():
     with Session(engine) as session:

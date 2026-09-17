@@ -4,3 +4,5 @@ __pycache__/
 .git/
 .idea/
 test.db
+.env
+.env.docker
