@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres
+    container_name: support_desk_db
     environment:
       POSTGRES_PASSWORD: 12345
     ports:
@@ -10,6 +11,7 @@ services:
 
   app:
     build: .
+    container_name: support-desk-container
     ports:
       - "8000:8000"
     env_file:
