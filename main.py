@@ -10,7 +10,7 @@ from app.middleware.timer import timing_middleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    SQLModel.metadata.create_all(engine)
+    # SQLModel.metadata.create_all(engine)
     yield
 
 app = FastAPI(title="Support_desk", lifespan=lifespan)
