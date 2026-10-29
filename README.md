@@ -1,155 +1,41 @@
-Support Desk Ticketing System
+# Support Desk Ticketing System
 
 A simple backend ticketing system (support desk / issue tracker), built with FastAPI and SQLModel. Users can create tickets and track their own, while admins manage all tickets and update their status.
 
-Features
-User registration and login (JWT authentication)
-Password hashing (pwdlib)
-Two user roles: user and admin
-CRUD operations for tickets
-Ownership logic — regular users can only see and modify their own tickets, admins can see and manage all tickets
-Pagination on the ticket list (skip, limit)
-Database powered by SQLModel/PostgreSQL, with a User ↔ Ticket relationship (foreign key)
-Database schema version tracking via Alembic migrations
-Middleware that measures and returns the processing time of each request (X-Process-Time header)
-Seed script for creating the first admin account
-Dockerized app and database, orchestrated with Docker Compose
-Pytest test suite covering auth, CRUD, ownership/permission logic, and validation edge cases
-Tech stack
-Python 3.13
-FastAPI
-SQLModel (SQLAlchemy + Pydantic)
-PostgreSQL
-Alembic (database migrations)
-JWT (PyJWT) + OAuth2 password flow
-pwdlib (password hashing)
-Docker & Docker Compose
-Pytest
-Project structure
-main.py
-create_admin.py
-.env
-.env.docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-alembic/
-├── env.py
-└── versions/
-app/
-├── models.py          (SQLModel tables: User, Ticket)
-├── database.py        (engine, get_session)
-├── schemas.py         (Pydantic: Create/Update/Out models, Token)
-├── auth.py            (JWT, hashing, route protection)
-├── routes/
-│   ├── auth_routes.py
-│   └── ticket_routes.py
-└── middleware/
-    └── timer.py
-test/
-├── conftest.py         (physically in project root)
-├── test_dummy.py
-├── test_auth.py
-└── test_tickets.py
-Data models
+## Live demo
 
-User
+Deployed on Render: https://support-desk-ticketing.onrender.com/docs
 
-id, username (unique), full_name, email (unique), phone_number
-role: USER or ADMIN
-is_active
-hashed_password
+Note: the free Render instance spins down after periods of inactivity, so the first request after idle time may take up to ~50 seconds.
 
-Ticket
+## Features
+- User registration and login (JWT authentication)
+- Password hashing (pwdlib)
+- Two user roles: user and admin
+- CRUD operations for tickets
+- Ownership logic — regular users can only see and modify their own tickets, admins can see and manage all tickets
+- Pagination on the ticket list (skip, limit)
+- Database powered by SQLModel/PostgreSQL, with a User ↔ Ticket relationship (foreign key)
+- Database schema version tracking via Alembic migrations
+- Middleware that measures and returns the processing time of each request (X-Process-Time header)
+- Seed script for creating the first admin account
+- Dockerized app and database, orchestrated with Docker Compose
+- Pytest test suite covering auth, CRUD, ownership/permission logic, and validation edge cases
+- Deployed to Render (Web Service + managed PostgreSQL)
 
-id, title, description
-status: OPEN, IN_PROGRESS, SOLVED
-priority: LOW, MEDIUM, HIGH
-created_at
-resolution (optional, set by admin)
-owner_id (foreign key to User)
-Authentication and roles
+## Tech stack
+- Python 3.13
+- FastAPI
+- SQLModel (SQLAlchemy + Pydantic)
+- PostgreSQL
+- Alembic (database migrations)
+- JWT (PyJWT) + OAuth2 password flow
+- pwdlib (password hashing)
+- Docker & Docker Compose
+- Pytest
+- Render (deployment)
 
-Authentication uses JWT tokens (OAuth2 password flow). After logging in, the token is sent in the Authorization: Bearer <token> header for all protected routes.
+[... ostatak fajla do "Possible extensions" ostaje isti ...]
 
-user — can create tickets, and can only see/modify their own tickets (cannot change status or resolution)
-admin — can see and modify all tickets, including changing status and setting the resolution
-API routes
-Method	Route	Description	Access
-POST	/register	Register a new user	Public
-POST	/token	Log in, returns a JWT token	Public
-GET	/ticket	List tickets (paginated)	Logged-in user (user sees their own, admin sees all)
-GET	/ticket/{ticket_id}	Get a single ticket	Owner or admin
-POST	/ticket	Create a new ticket	Logged-in user
-PATCH	/ticket/{ticket_id}	Update a ticket	Owner (limited) or admin (full)
-DELETE	/ticket/{ticket_id}	Delete a ticket	Owner or admin
-Getting started (with Docker Compose — recommended)
-Clone the repository and enter the project folder
-Create a .env.docker file in the project root with the following content
-   SECRET_KEY=your_secret_key_here
-   DATABASE_URL=postgresql://postgres:12345@db:5432/support_desk
-Make sure Docker Desktop is running
-Build and start both containers (app + Postgres)
-   docker compose up
-
-(add -d to run in the background)
-
-On first run, apply Alembic migrations from your host machine
-   alembic upgrade head
-
-(this requires a local .env file with DATABASE_URL=postgresql://postgres:12345@localhost:5432/support_desk, plus a local virtual environment with the project dependencies installed)
-
-API documentation (Swagger UI) is available at
-   http://localhost:8000/docs
-
-To stop the containers (keeping the database data):
-
-docker compose down
-Getting started (without Docker)
-Clone the repository and enter the project folder
-Create and activate a virtual environment
-   python -m venv .venv
-   .venv\Scripts\activate
-Install dependencies
-   pip install -r requirements.txt
-Create a .env file in the project root with the following content
-   SECRET_KEY=your_secret_key_here
-   DATABASE_URL=postgresql://postgres:12345@localhost:5432/support_desk
-Apply the database migrations
-   alembic upgrade head
-Run the server
-   uvicorn main:app --reload
-API documentation (Swagger UI) is available at
-   http://127.0.0.1:8000/docs
-Creating an admin user
-
-The first admin account is created manually via the seed script (there is no public route for granting the admin role):
-
-python create_admin.py
-
-The script asks for a username, password, and optionally an email/full name, and creates a user with the ADMIN role directly in the database.
-
-Database migrations
-
-This project uses Alembic to track changes to the database schema. After every change to the models in app/models.py:
-
-alembic revision --autogenerate -m "description of the change"
-alembic upgrade head
-Testing
-
-This project has a pytest test suite covering:
-
-Auth: registration, duplicate usernames, login, invalid credentials, protected routes
-Ticket CRUD: create, read, update, delete
-Ownership/permission logic: regular users vs admins
-Validation edge cases (e.g. empty required fields)
-
-Tests run against a separate SQLite test database, independent of the PostgreSQL database used in development/production.
-
-Install test dependencies and run:
-
-pip install pytest httpx
-pytest
-Possible extensions (phase 2)
-A dedicated Comment table instead of a single resolution field
-Deployment to a cloud provider
+## Possible extensions (phase 2)
+- A dedicated Comment table instead of a single resolution field
