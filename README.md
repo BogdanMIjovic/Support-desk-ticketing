@@ -35,7 +35,164 @@ Note: the free Render instance spins down after periods of inactivity, so the fi
 - Pytest
 - Render (deployment)
 
-[... ostatak fajla do "Possible extensions" ostaje isti ...]
+## Project structure
+
+main.py
+create_admin.py
+.env
+.env.docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+alembic/
+├── env.py
+└── versions/
+app/
+├── models.py          (SQLModel tables: User, Ticket)
+├── database.py        (engine, get_session)
+├── schemas.py         (Pydantic: Create/Update/Out models, Token)
+├── auth.py            (JWT, hashing, route protection)
+├── routes/
+│   ├── auth_routes.py
+│   └── ticket_routes.py
+└── middleware/
+    └── timer.py
+test/
+├── conftest.py         (physically in project root)
+├── test_dummy.py
+├── test_auth.py
+└── test_tickets.py
+
+## Data models
+
+**User**
+- id, username (unique), full_name, email (unique), phone_number
+- role: USER or ADMIN
+- is_active
+- hashed_password
+
+**Ticket**
+- id, title, description
+- status: OPEN, IN_PROGRESS, SOLVED
+- priority: LOW, MEDIUM, HIGH
+- created_at
+- resolution (optional, set by admin)
+- owner_id (foreign key to User)
+
+## Authentication and roles
+
+Authentication uses JWT tokens (OAuth2 password flow). After logging in, the token is sent in the Authorization: Bearer <token> header for all protected routes.
+
+- **user** — can create tickets, and can only see/modify their own tickets (cannot change status or resolution)
+- **admin** — can see and modify all tickets, including changing status and setting the resolution
+
+## API routes
+
+| Method | Route | Description | Access |
+|---|---|---|---|
+| POST | /register | Register a new user | Public |
+| POST | /token | Log in, returns a JWT token | Public |
+| GET | /ticket | List tickets (paginated) | Logged-in user (user sees their own, admin sees all) |
+| GET | /ticket/{ticket_id} | Get a single ticket | Owner or admin |
+| POST | /ticket | Create a new ticket | Logged-in user |
+| PATCH | /ticket/{ticket_id} | Update a ticket | Owner (limited) or admin (full) |
+| DELETE | /ticket/{ticket_id} | Delete a ticket | Owner or admin |
+
+## Getting started (with Docker Compose — recommended)
+
+1. Clone the repository and enter the project folder
+
+2. Create a .env.docker file in the project root with the following content
+
+SECRET_KEY=your_secret_key_here
+DATABASE_URL=postgresql://postgres:12345@db:5432/support_desk
+
+3. Make sure Docker Desktop is running
+
+4. Build and start both containers (app + Postgres)
+
+docker compose up
+
+(add -d to run in the background)
+
+5. On first run, apply Alembic migrations from your host machine
+
+alembic upgrade head
+
+(this requires a local .env file with DATABASE_URL=postgresql://postgres:12345@localhost:5432/support_desk, plus a local virtual environment with the project dependencies installed)
+
+6. API documentation (Swagger UI) is available at
+
+http://localhost:8000/docs
+
+To stop the containers (keeping the database data):
+
+docker compose down
+
+## Getting started (without Docker)
+
+1. Clone the repository and enter the project folder
+
+2. Create and activate a virtual environment
+
+python -m venv .venv
+.venv\Scripts\activate
+
+3. Install dependencies
+
+pip install -r requirements.txt
+
+4. Create a .env file in the project root with the following content
+
+SECRET_KEY=your_secret_key_here
+DATABASE_URL=postgresql://postgres:12345@localhost:5432/support_desk
+
+5. Apply the database migrations
+
+alembic upgrade head
+
+6. Run the server
+
+uvicorn main:app --reload
+
+7. API documentation (Swagger UI) is available at
+
+http://127.0.0.1:8000/docs
+
+## Creating an admin user
+
+The first admin account is created manually via the seed script (there is no public route for granting the admin role):
+
+python create_admin.py
+
+The script asks for a username, password, and optionally an email/full name, and creates a user with the ADMIN role directly in the database.
+
+## Database migrations
+
+This project uses Alembic to track changes to the database schema. After every change to the models in app/models.py:
+
+alembic revision --autogenerate -m "description of the change"
+alembic upgrade head
+
+## Testing
+
+This project has a pytest test suite covering:
+
+- Auth: registration, duplicate usernames, login, invalid credentials, protected routes
+- Ticket CRUD: create, read, update, delete
+- Ownership/permission logic: regular users vs admins
+- Validation edge cases (e.g. empty required fields)
+
+Tests run against a separate SQLite test database, independent of the PostgreSQL database used in development/production.
+
+Install test dependencies and run:
+
+pip install pytest httpx
+pytest
+
+## Deployment
+
+The app is deployed on Render (https://render.com) as a Web Service (built from the Dockerfile), with a managed PostgreSQL database on the same platform. Environment variables (SECRET_KEY, DATABASE_URL) are configured directly in the Render dashboard rather than committed to the repository.
 
 ## Possible extensions (phase 2)
 - A dedicated Comment table instead of a single resolution field
